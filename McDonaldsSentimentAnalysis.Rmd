@@ -1,5 +1,5 @@
 ---
-title: "Starter_Twitter_Analysis_Code"
+title: "McDonaldsSentimentAnalysis"
 output:
   html_document:
     df_print: paged
@@ -58,10 +58,10 @@ setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_token_se
 
 ########################################################
 ```{r, echo=FALSE}
-consumer_key="HL3yxWxpolOGvHaesV1r5spp3"
-consumer_secret="BijK2ij1tZ0uGKyxgnHUnfzuZmixNHidl2ycGXexuDL664FrLE"
-access_token="908831329764208642-wCm7TUnCZCWn6ZKScbEr4NnnIIF3LX2"
-access_token_secret="WcSAEwFuGMuLdywz0s4F5DihcvtD9kfRjaNyuQSCSK9m1"
+consumer_key=""
+consumer_secret=""
+access_token=""
+access_token_secret=""
 ##To set up Twitter Authorization during R session. To gain access to Twitter
 setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_token_secret)
 
@@ -88,11 +88,8 @@ TweetFrame<-function(searchTerm,n,SINCE)
 		return(tweetDF[order(as.integer(tweetDF$created)), ]) 
 	}
 ```
-#Get tweets for keywords Verizon, Sprint, and TMobile and store them in separate dataframes
+#Get tweets for keywords mcdonalds, wendys, burgerking, arbys, kfc, and subway and store them in separate dataframes
 ```{r}
-Verizon=TweetFrame("#Verizon",5000,'2022-12-01')
-Sprint=TweetFrame("#Sprint",5000,'2022-12-01')
-TMobile=TweetFrame("#T-Mobile",5000,'2022-12-01')
 
 mcdonalds0203=TweetFrame("#mcdonalds",5000,'2022-12-01')
 wendys0203=TweetFrame("#wendys",5000,'2022-12-01')
