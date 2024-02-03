@@ -1,0 +1,874 @@
+---
+title: "Starter_Twitter_Analysis_Code"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+######################################################
+#Code for Installing and Loading the Required packages
+#####################################################
+
+```{r}
+
+InstallAndLoadPackages<-function(x) 
+{  
+x <- as.character(x)  
+if (!require(x,character.only=TRUE))  
+       {
+   		 install.packages(pkgs=x,repos="http://cran.r-project.org") 
+   		 require(x,character.only=TRUE)  
+       }	 	
+}
+
+PrepareTwitter<-function() {  
+InstallAndLoadPackages("bitops") 
+InstallAndLoadPackages("RCurl")  
+InstallAndLoadPackages("RJSONIO")  
+InstallAndLoadPackages("ROAuth")
+InstallAndLoadPackages("SnowballC")
+InstallAndLoadPackages("modeest")
+InstallAndLoadPackages("tm")
+InstallAndLoadPackages("rJava")
+InstallAndLoadPackages("RWeka")
+InstallAndLoadPackages("RWekajars")
+InstallAndLoadPackages("stopwords")
+
+InstallAndLoadPackages("twitteR")  
+InstallAndLoadPackages("wordcloud")
+InstallAndLoadPackages("tidytext")
+InstallAndLoadPackages("topicmodels")
+
+}
+
+PrepareTwitter()
+```
+######################################################
+#Get the following info from yout Twitter account. Fill in your consumer key, consumer secret, access token and accesstoken secret here
+
+Create four variables and call them:
+* consumer_key
+* consumer_secret
+* access_token
+* access_token_secret
+
+And then run the following command:
+setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_token_secret)
+
+########################################################
+```{r, echo=FALSE}
+consumer_key="HL3yxWxpolOGvHaesV1r5spp3"
+consumer_secret="BijK2ij1tZ0uGKyxgnHUnfzuZmixNHidl2ycGXexuDL664FrLE"
+access_token="908831329764208642-wCm7TUnCZCWn6ZKScbEr4NnnIIF3LX2"
+access_token_secret="WcSAEwFuGMuLdywz0s4F5DihcvtD9kfRjaNyuQSCSK9m1"
+##To set up Twitter Authorization during R session. To gain access to Twitter
+setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_token_secret)
+
+##mode(tweetlist)
+##str(head(tweetList,1))
+##length(tweetList)
+
+```
+#Define function to get tweets based on a search term - e.g. Brand. Return n tweets SINCE year as a dataframe
+``` {r}
+TweetFrame<-function(searchTerm,n,SINCE) 
+	{  
+		# This function TweetFrame() - Return a dataframe based on a search of Twitter 
+		tweetList <- searchTwitter(searchTerm,n,since=SINCE,lang='en')    
+
+		# as.data.frame() coerces each list element into a row  
+		# lapply() applies this to all of the elements in twtList  
+		# rbind() takes all of the rows and puts them together  
+		# do.call() gives rbind() all rows as individual elements  
+
+		tweetDF<- do.call("rbind", lapply(tweetList,as.data.frame))    
+		# This last step sorts the tweets in arrival order  
+
+		return(tweetDF[order(as.integer(tweetDF$created)), ]) 
+	}
+```
+#Get tweets for keywords Verizon, Sprint, and TMobile and store them in separate dataframes
+```{r}
+Verizon=TweetFrame("#Verizon",5000,'2022-12-01')
+Sprint=TweetFrame("#Sprint",5000,'2022-12-01')
+TMobile=TweetFrame("#T-Mobile",5000,'2022-12-01')
+
+mcdonalds0203=TweetFrame("#mcdonalds",5000,'2022-12-01')
+wendys0203=TweetFrame("#wendys",5000,'2022-12-01')
+burgerking0203=TweetFrame("#burgerking",5000,'2022-12-01')
+arbys0203=TweetFrame("#arbys",5000,'2022-12-01')
+kfc0203=TweetFrame("#kfc",5000,'2022-12-01')
+subway0203=TweetFrame("#subway",5000,'2022-12-01')
+
+##Combine all dataframes into one larger cell dataframe
+cell=rbind(mcdonalds0203,subway0203,kfc0203)
+
+hist(cell$created,breaks=15,freq=TRUE)
+mfv(as.integer(diff(cell$created))) 
+
+```
+```{r}
+mcdonalds0303=TweetFrame("#mcdonalds",5000,'2022-12-01')
+wendys0303=TweetFrame("#wendys",5000,'2022-12-01')
+burgerking0303=TweetFrame("#burgerking",5000,'2022-12-01')
+arbys0303=TweetFrame("#arbys",5000,'2022-12-01')
+kfc0303=TweetFrame("#kfc",5000,'2022-12-01')
+subway0303=TweetFrame("#subway",5000,'2022-12-01')
+```
+```{r}
+mcdonalds0403=TweetFrame("#mcdonalds",5000,'2022-12-01')
+wendys0403=TweetFrame("#wendys",5000,'2022-12-01')
+burgerking0403=TweetFrame("#burgerking",5000,'2022-12-01')
+arbys0403=TweetFrame("#arbys",5000,'2022-12-01')
+kfc0403=TweetFrame("#kfc",5000,'2022-12-01')
+subway0403=TweetFrame("#subway",5000,'2022-12-01')
+```
+```{r}
+chipotle0403=TweetFrame("#chipotle",5000,'2022-12-01')
+chickfila0403=TweetFrame("#chickfila",5000,'2022-12-01')
+```
+```{r}
+starbucks0403 = TweetFrame("#starbucks",5000,'2022-12-01')
+```
+```{r}
+tacobell0403=TweetFrame("#tacobell",5000,'2022-12-01')
+dunkin0403=TweetFrame("#dunkin",5000,'2022-12-01')
+dominos0403=TweetFrame("#dominos",5000,'2022-12-01')
+```
+
+```{r}
+starbucksfull = starbucks0403
+mcdonaldsfull = merge(mcdonaldsfull, mcdonalds0403, all = TRUE)
+subwayfull = merge(subwayfull, subway0403, all = TRUE)
+kfcfull = merge(kfcfull, kfc0403, all = TRUE)
+
+##Combine all dataframes into one larger cell dataframe
+cell=rbind(mcdonaldsfull,subwayfull,kfcfull, starbucksfull)
+
+hist(cell$created,breaks=15,freq=TRUE)
+mfv(as.integer(diff(cell$created))) 
+```
+```{r}
+mcdonalds0503=TweetFrame("#mcdonalds",5000,'2022-12-01')
+kfc0503=TweetFrame("#kfc",5000,'2022-12-01')
+subway0503=TweetFrame("#subway",5000,'2022-12-01')
+starbucks0503 = TweetFrame("#starbucks",5000,'2022-12-01')
+```
+
+```{r}
+mcdonalds0603=TweetFrame("#mcdonalds",5000,'2022-12-01')
+kfc0603=TweetFrame("#kfc",5000,'2022-12-01')
+subway0603=TweetFrame("#subway",5000,'2022-12-01')
+starbucks0603 = TweetFrame("#starbucks",5000,'2022-12-01')
+```
+```{r}
+mcdonaldsfull.unique <- mcdonaldsfull %>%
+  group_by(id) %>%
+  summarise(text = first(text), created = first(created))
+
+starbucksfull.unique <- starbucksfull %>%
+  group_by(id) %>%
+  summarise(text = first(text), created = first(created))
+
+subwayfull.unique <- subwayfull %>%
+  group_by(id) %>%
+  summarise(text = first(text), created = first(created))
+
+kfcfull.unique <- kfcfull %>%
+  group_by(id) %>%
+  summarise(text = first(text), created = first(created))
+```
+
+
+```{r}
+starbucksfull = merge(starbucksfull, starbucks0603, all = TRUE)
+mcdonaldsfull = merge(mcdonaldsfull, mcdonalds0603, all = TRUE)
+subwayfull = merge(subwayfull, subway0603, all = TRUE)
+kfcfull = merge(kfcfull, kfc0603, all = TRUE)
+
+##Combine all dataframes into one larger cell dataframe
+cell=rbind(mcdonaldsfull,subwayfull,kfcfull, starbucksfull)
+
+# group the data frame by the "id" column and keep the first value of all other columns
+cell <- cell %>%
+  group_by(id) %>%
+  summarise(text = first(text), created = first(created))
+
+hist(cell$created,breaks=15,freq=TRUE)
+mfv(as.integer(diff(cell$created))) 
+```
+
+#Converting Dataframe to a Corpus from Tweeted text vectors and cleaning text
+```{r}
+myStopwords = c(stopwords(source = "snowball"),
+                stopwords(source = "stopwords-iso"),
+                stopwords(source = "smart"),
+              "...", "’s", "🀭", "❤️", "👲", "🔯", "⭐️", "ownerwillcarry", "drawluca…")
+myStopwords = unique(myStopwords)
+
+Corpus.cell = Corpus(VectorSource(cell$text))
+myCorpus=Corpus.cell
+
+# remove stopwords
+# I HAVE ALREADY DEFINED MY STOPWORDS IN MyStopwords
+myStopwords <- stopwords('english')
+myCorpus2 <- tm_map(myCorpus, removeWords, myStopwords)
+# remove punctuation
+myCorpus2 <- tm_map(myCorpus2, removePunctuation)
+# remove numbers
+myCorpus2 <- tm_map(myCorpus2, removeNumbers)
+# Convert all Alphabets to lowercase
+myCorpus2 <- tm_map(myCorpus2, tolower)
+```
+####Construct a Term x Document matrix
+```{r}
+TDM_cell <- TermDocumentMatrix(myCorpus2, control = list(minWordLength = 5))
+dim(TDM_cell)
+inspect(TDM_cell[1:20,20:30])
+head(TDM_cell)
+```
+##### Produce a WordCloud
+#calculate the frequency of words
+```{r}
+freeq <- sort(rowSums(as.matrix(TDM_cell)), decreasing=TRUE)
+myNames <- names(freeq)
+d <- data.frame(word=names(freeq), freq=freeq)
+wordcloud(d$word, d$freq, min.freq=50)
+```
+###############################
+### K-means clustering on TDM 
+#################################
+## Documents will be clustered based on topics discussed
+### Analogous to Topic Modeling
+#########################################
+
+```{r}
+cell.kmeans.3 <- kmeans(t(TDM_cell), centers = 3, nstart=5)
+sort(cell.kmeans.3$centers[1,],decreasing=TRUE)[1:100]
+table(cell.kmeans.3$cluster)
+```
+
+############################
+#======TOPIC MODELING IN R using package topicmodels.
+## Using function LDA - Latent Dirichlet Allocation modeling approach.
+############################
+
+```{r}
+set.seed(123)
+system.time(cell.topicmodel5 <- topicmodels::LDA(t(TDM_cell), 5, method = "Gibbs", control = list(iter=2000, seed = 0622)))
+cell.topics5 <- topicmodels::topics(cell.topicmodel5, 1)
+## In this case I am returning the top 30 terms.
+cell.terms.5topics <- as.data.frame(topicmodels::terms(cell.topicmodel5, 50), stringsAsFactors = FALSE)
+##Viewing the topics
+head(cell.terms.5topics)
+```
+```{r}
+# Compute coherence scores for the topics in your model
+topic_diagnostics(cell.topicmodel5, t(TDM_cell))
+```
+```{r}
+topic_size(cell.topicmodel5)
+mean_token_length(cell.topicmodel5)
+```
+
+```{r}
+set.seed(123)
+system.time(cell.topicmodel10 <- topicmodels::LDA(t(TDM_cell), 10, method = "Gibbs", control = list(iter=2000, seed = 0622)))
+cell.topics10 <- topicmodels::topics(cell.topicmodel10, 1)
+## In this case I am returning the top 10 terms.
+cell.terms.10topics <- as.data.frame(topicmodels::terms(cell.topicmodel10, 50), stringsAsFactors = FALSE)
+##Viewing the topics
+head(cell.terms.10topics)
+```
+```{r}
+library("text2vec")
+library("topicdoc")
+```
+```{r}
+# Compute coherence scores for the topics in your model
+topic_diagnostics(cell.topicmodel10, t(TDM_cell))
+```
+```{r}
+topic_size(cell.topicmodel10)
+mean_token_length(cell.topicmodel)
+```
+# For 10 topic:
+# 4: Brand reputation
+# 6: Advertising and Promotions
+# 7: Food and Beverages
+# 10: Social Media Engagement
+
+```{r}
+set.seed(123)
+system.time(cell.topicmodel15 <- topicmodels::LDA(t(TDM_cell), 15, method = "Gibbs", control = list(iter=2000, seed = 0622)))
+cell.topics15 <- topicmodels::topics(cell.topicmodel15, 1)
+## In this case I am returning the top 30 terms.
+cell.terms.15topics <- as.data.frame(topicmodels::terms(cell.topicmodel15, 50), stringsAsFactors = FALSE)
+##Viewing the topics
+head(cell.terms.15topics)
+```
+```{r}
+# Compute coherence scores for the topics in your model
+topic_diagnostics(cell.topicmodel15, t(TDM_cell))
+```
+```{r}
+topic_size(cell.topicmodel15)
+mean_token_length(cell.topicmodel15)
+```
+# For 15 topic:
+# 4: Food and Beverages
+# 6: Brand reputation
+# 8: Advertising and Promotions
+# 10: Mcdonalds
+# 14: Social Media Engagement
+# 15: Beverages
+
+
+# We use LDA with 10 topics and use:
+# 4: Brand reputation
+# 6: Advertising and Promotions
+# 7: Food and Beverages
+# 10: Social Media Engagement
+
+# Most frequent words in all tweets:
+```{r}
+# Plot a horizontal histogram
+library(ggplot2)
+
+ggplot(head(d,30), aes(x = (reorder(word, freq)), y = freq)) +
+    geom_col() +
+    labs(title="All Brand Tweets",
+         x = "Words",
+         y = "Frequency") +
+    coord_flip()
+```
+#Topic 4 word frequencies: Brand Reputation
+```{r}
+search_pattern <- str_c(cell.terms.10topics$`Topic 4`, collapse = "|")
+matches <- str_extract_all(cell$text, search_pattern)
+contains_word <- lengths(matches) > 0
+sentences_with_word <- cell[contains_word, ]
+
+# Cleaning tweets
+myStopwords = c(stopwords(source = "snowball"),
+                stopwords(source = "stopwords-iso"),
+                stopwords(source = "smart"))
+myStopwords = unique(myStopwords)
+Corpus.cell_topic4 = Corpus(VectorSource(sentences_with_word$text))
+myCorpus_topic4=Corpus.cell_topic4
+##### remove stopwords
+### I HAVE ALREADY DEFINED MY STOPWORDS IN MyStopwords
+myStopwords <- stopwords('english')
+myCorpus_topic4 <- tm_map(myCorpus_topic4, removeWords, myStopwords)
+# remove punctuation
+myCorpus_topic4 <- tm_map(myCorpus_topic4, removePunctuation)
+# remove numbers
+myCorpus_topic4 <- tm_map(myCorpus_topic4, removeNumbers)
+# Convert all Alphabets to lowercase
+#myCorpus2 <- tm_map(myCorpus2, tolower)
+
+####Construct a Term x Document matrix
+TDM_cell_topic4 <- TermDocumentMatrix(myCorpus_topic4, control = list(minWordLength = 5))
+dim(TDM_cell_topic4)
+inspect(TDM_cell_topic4[1:20,20:30])
+head(TDM_cell_topic4)
+
+##### Produce a WordCloud
+#calculate the frequency of words
+freeq_topic4 <- sort(rowSums(as.matrix(TDM_cell_topic4)), decreasing=TRUE)
+myNames_topic4 <- names(freeq_topic4)
+d_topic4 <- data.frame(word=names(freeq_topic4), freq=freeq_topic4)
+wordcloud(d_topic4$word, d_topic4$freq, min.freq=50)
+```
+
+```{r}
+# Plot a horizontal histogram with 2 columns
+ggplot(head(d_topic4,30), aes(x = (reorder(word, freq)), y = freq)) +
+    geom_col() +
+    labs(title="Topic 4 Tweets",
+         x = "Words",
+         y = "Frequency") +
+    coord_flip()
+```
+```{r}
+topic4_hist = merge(d, d_topic4, by = "word", all = FALSE)
+topic4_hist = topic4_hist[order(topic4_hist$freq.y, decreasing = TRUE),]
+topic4_hist
+```
+```{r}
+# Plot a horizontal histogram with 2 columns
+ggplot(head(topic4_hist,30), aes(x = reorder(word, freq.y))) +
+  geom_col(aes(y = freq.y, fill = "Frequency in topic 4"), alpha = 1) +
+  geom_col(aes(y = freq.x, fill = "Overall Frequency"), alpha = 0.5) +
+  scale_fill_manual(values = c("cyan", "darkgoldenrod1"))+
+  labs(title="Topic 4 Tweets Word Fequency",
+        x = "Words",
+        y = "Frequency") +
+  guides(fill = guide_legend(title = "Y-axis")) +
+  coord_flip()
+```
+```{r}
+search_pattern <- paste("\\b(", paste(cell.terms.10topics$`Topic 4`[1:15], collapse = "|"), ")\\b", sep = "")
+matches <- str_extract_all(topic4_hist$word, search_pattern)
+is_word <- lengths(matches) > 0
+words_found <- topic4_hist[is_word, ]
+
+# Plot a horizontal histogram with words in top 10 of topic 1
+ggplot(head(words_found,10), aes(x = reorder(word, freq.y))) +
+  geom_col(aes(y = freq.y, fill = "Frequency in topic 4"), alpha = 1) +
+  geom_col(aes(y = freq.x, fill = "Overall Frequency"), alpha = 0.5) +
+  scale_fill_manual(values = c("cyan", "darkgoldenrod1"))+
+  labs(title="Topic 4 Key Words Frequency",
+        x = "Words",
+        y = "Frequency") +
+  guides(fill = guide_legend(title = "Y-axis")) +
+  coord_flip()
+```
+#Topic 6 word frequencies: Advertising and Promotions
+```{r}
+search_pattern <- str_c(cell.terms.10topics$`Topic 6`, collapse = "|")
+matches <- str_extract_all(cell$text, search_pattern)
+contains_word <- lengths(matches) > 0
+sentences_with_word <- cell[contains_word, ]
+
+# Cleaning tweets
+myStopwords = c(stopwords(source = "snowball"),
+                stopwords(source = "stopwords-iso"),
+                stopwords(source = "smart"))
+myStopwords = unique(myStopwords)
+Corpus.cell_topic6 = Corpus(VectorSource(sentences_with_word$text))
+myCorpus_topic6=Corpus.cell_topic6
+##### remove stopwords
+### I HAVE ALREADY DEFINED MY STOPWORDS IN MyStopwords
+myStopwords <- stopwords('english')
+myCorpus_topic6 <- tm_map(myCorpus_topic6, removeWords, myStopwords)
+# remove punctuation
+myCorpus_topic6 <- tm_map(myCorpus_topic6, removePunctuation)
+# remove numbers
+myCorpus_topic6 <- tm_map(myCorpus_topic6, removeNumbers)
+# Convert all Alphabets to lowercase
+#myCorpus2 <- tm_map(myCorpus2, tolower)
+
+####Construct a Term x Document matrix
+TDM_cell_topic6 <- TermDocumentMatrix(myCorpus_topic6, control = list(minWordLength = 5))
+dim(TDM_cell_topic6)
+inspect(TDM_cell_topic6[1:20,20:30])
+head(TDM_cell_topic6)
+
+##### Produce a WordCloud
+#calculate the frequency of words
+freeq_topic6 <- sort(rowSums(as.matrix(TDM_cell_topic6)), decreasing=TRUE)
+myNames_topic6 <- names(freeq_topic6)
+d_topic6 <- data.frame(word=names(freeq_topic6), freq=freeq_topic6)
+wordcloud(d_topic6$word, d_topic6$freq, min.freq=50)
+```
+```{r}
+# Plot a horizontal histogram with 2 columns
+ggplot(head(d_topic6,30), aes(x = (reorder(word, freq)), y = freq)) +
+    geom_col() +
+    labs(title="Topic 6 Tweets",
+         x = "Words",
+         y = "Frequency") +
+    coord_flip()
+```
+```{r}
+topic6_hist = merge(d, d_topic6, by = "word", all = FALSE)
+topic6_hist = topic6_hist[order(topic6_hist$freq.y, decreasing = TRUE),]
+# Plot a horizontal histogram with 2 columns
+ggplot(head(topic6_hist,30), aes(x = reorder(word, freq.y))) +
+  geom_col(aes(y = freq.y, fill = "Frequency in topic 6"), alpha = 1) +
+  geom_col(aes(y = freq.x, fill = "Overall Frequency"), alpha = 0.5) +
+  scale_fill_manual(values = c("cyan", "darkgoldenrod1"))+
+  labs(title="Topic 6 Tweets Word Fequency",
+        x = "Words",
+        y = "Frequency") +
+  guides(fill = guide_legend(title = "Y-axis")) +
+  coord_flip()
+```
+```{r}
+search_pattern <- paste("\\b(", paste(cell.terms.10topics$`Topic 6`[1:15], collapse = "|"), ")\\b", sep = "")
+matches <- str_extract_all(topic6_hist$word, search_pattern)
+is_word <- lengths(matches) > 0
+words_found <- topic6_hist[is_word, ]
+
+# Plot a horizontal histogram with words in top 10 of topic 1
+ggplot(head(words_found,10), aes(x = reorder(word, freq.y))) +
+  geom_col(aes(y = freq.y, fill = "Frequency in topic 6"), alpha = 1) +
+  geom_col(aes(y = freq.x, fill = "Overall Frequency"), alpha = 0.5) +
+  scale_fill_manual(values = c("cyan", "darkgoldenrod1"))+
+  labs(title="Topic 6 Key Words Frequency",
+        x = "Words",
+        y = "Frequency") +
+  guides(fill = guide_legend(title = "Y-axis")) +
+  coord_flip()
+```
+
+#Topic 7 word frequencies: Food and Beverages
+```{r}
+search_pattern <- str_c(cell.terms.10topics$`Topic 7`, collapse = "|")
+matches <- str_extract_all(cell$text, search_pattern)
+contains_word <- lengths(matches) > 0
+sentences_with_word <- cell[contains_word, ]
+
+# Cleaning tweets
+myStopwords = c(stopwords(source = "snowball"),
+                stopwords(source = "stopwords-iso"),
+                stopwords(source = "smart"))
+myStopwords = unique(myStopwords)
+Corpus.cell_topic7 = Corpus(VectorSource(sentences_with_word$text))
+myCorpus_topic7=Corpus.cell_topic7
+##### remove stopwords
+### I HAVE ALREADY DEFINED MY STOPWORDS IN MyStopwords
+myStopwords <- stopwords('english')
+myCorpus_topic7 <- tm_map(myCorpus_topic7, removeWords, myStopwords)
+# remove punctuation
+myCorpus_topic7 <- tm_map(myCorpus_topic7, removePunctuation)
+# remove numbers
+myCorpus_topic7 <- tm_map(myCorpus_topic7, removeNumbers)
+# Convert all Alphabets to lowercase
+#myCorpus2 <- tm_map(myCorpus2, tolower)
+
+####Construct a Term x Document matrix
+TDM_cell_topic7 <- TermDocumentMatrix(myCorpus_topic7, control = list(minWordLength = 5))
+dim(TDM_cell_topic7)
+inspect(TDM_cell_topic7[1:20,20:30])
+head(TDM_cell_topic7)
+
+##### Produce a WordCloud
+#calculate the frequency of words
+freeq_topic7 <- sort(rowSums(as.matrix(TDM_cell_topic7)), decreasing=TRUE)
+myNames_topic7 <- names(freeq_topic7)
+d_topic7 <- data.frame(word=names(freeq_topic7), freq=freeq_topic7)
+wordcloud(d_topic7$word, d_topic7$freq, min.freq=50)
+```
+
+```{r}
+# Plot a horizontal histogram with 2 columns
+ggplot(head(d_topic7,30), aes(x = (reorder(word, freq)), y = freq)) +
+    geom_col() +
+    labs(title="Topic 7 Tweets",
+         x = "Words",
+         y = "Frequency") +
+    coord_flip()
+```
+```{r}
+topic7_hist = merge(d, d_topic7, by = "word", all = FALSE)
+topic7_hist = topic7_hist[order(topic7_hist$freq.y, decreasing = TRUE),]
+topic7_hist
+```
+```{r}
+# Plot a horizontal histogram with 2 columns
+ggplot(head(topic7_hist,10), aes(x = reorder(word, freq.y))) +
+  geom_col(aes(y = freq.y, fill = "Frequency in topic 7"), alpha = 1) +
+  geom_col(aes(y = freq.x, fill = "Overall Frequency"), alpha = 0.5) +
+  scale_fill_manual(values = c("cyan", "darkgoldenrod1"))+
+  labs(title="Topic 7 Tweets Word Fequency",
+        x = "Words",
+        y = "Frequency") +
+  guides(fill = guide_legend(title = "Y-axis")) +
+  coord_flip()
+```
+```{r}
+search_pattern <- paste("\\b(", paste(cell.terms.10topics$`Topic 7`[1:15], collapse = "|"), ")\\b", sep = "")
+matches <- str_extract_all(topic7_hist$word, search_pattern)
+is_word <- lengths(matches) > 0
+words_found <- topic7_hist[is_word, ]
+
+# Plot a horizontal histogram with words in top 10 of topic 1
+ggplot(head(words_found,10), aes(x = reorder(word, freq.y))) +
+  geom_col(aes(y = freq.y, fill = "Frequency in topic 7"), alpha = 1) +
+  geom_col(aes(y = freq.x, fill = "Overall Frequency"), alpha = 0.5) +
+  scale_fill_manual(values = c("cyan", "darkgoldenrod1"))+
+  labs(title="Topic 7 Key Words Frequency",
+        x = "Words",
+        y = "Frequency") +
+  guides(fill = guide_legend(title = "Y-axis")) +
+  coord_flip()
+```
+# Topic 10 Word Frequency: Social Media Engagement
+```{r}
+search_pattern <- str_c(cell.terms.10topics$`Topic 10`, collapse = "|")
+matches <- str_extract_all(cell$text, search_pattern)
+contains_word <- lengths(matches) > 0
+sentences_with_word <- cell[contains_word, ]
+
+# Cleaning tweets
+myStopwords = c(stopwords(source = "snowball"),
+                stopwords(source = "stopwords-iso"),
+                stopwords(source = "smart"))
+myStopwords = unique(myStopwords)
+Corpus.cell_topic10 = Corpus(VectorSource(sentences_with_word$text))
+myCorpus_topic10=Corpus.cell_topic10
+##### remove stopwords
+### I HAVE ALREADY DEFINED MY STOPWORDS IN MyStopwords
+myStopwords <- stopwords('english')
+myCorpus_topic10 <- tm_map(myCorpus_topic10, removeWords, myStopwords)
+# remove punctuation
+myCorpus_topic10 <- tm_map(myCorpus_topic10, removePunctuation)
+# remove numbers
+myCorpus_topic10 <- tm_map(myCorpus_topic10, removeNumbers)
+# Convert all Alphabets to lowercase
+#myCorpus2 <- tm_map(myCorpus2, tolower)
+
+####Construct a Term x Document matrix
+TDM_cell_topic10 <- TermDocumentMatrix(myCorpus_topic10, control = list(minWordLength = 5))
+dim(TDM_cell_topic10)
+inspect(TDM_cell_topic10[1:20,20:30])
+head(TDM_cell_topic10)
+
+##### Produce a WordCloud
+#calculate the frequency of words
+freeq_topic10 <- sort(rowSums(as.matrix(TDM_cell_topic10)), decreasing=TRUE)
+myNames_topic7 <- names(freeq_topic10)
+d_topic10 <- data.frame(word=names(freeq_topic10), freq=freeq_topic10)
+wordcloud(d_topic10$word, d_topic10$freq, min.freq=50)
+```
+
+```{r}
+# Plot a horizontal histogram with 2 columns
+ggplot(head(d_topic10,30), aes(x = (reorder(word, freq)), y = freq)) +
+    geom_col() +
+    labs(title="Topic 10 Tweets",
+         x = "Words",
+         y = "Frequency") +
+    coord_flip()
+```
+```{r}
+topic10_hist = merge(d, d_topic10, by = "word", all = FALSE)
+topic10_hist = topic10_hist[order(topic10_hist$freq.y, decreasing = TRUE),]
+topic10_hist
+```
+```{r}
+# Plot a horizontal histogram with 2 columns
+ggplot(head(topic10_hist,10), aes(x = reorder(word, freq.y))) +
+  geom_col(aes(y = freq.y, fill = "Frequency in topic 10"), alpha = 1) +
+  geom_col(aes(y = freq.x, fill = "Overall Frequency"), alpha = 0.5) +
+  scale_fill_manual(values = c("cyan", "darkgoldenrod1"))+
+  labs(title="Topic 10 Tweets Word Fequency",
+        x = "Words",
+        y = "Frequency") +
+  guides(fill = guide_legend(title = "Y-axis")) +
+  coord_flip()
+```
+```{r}
+search_pattern <- paste("\\b(", paste(cell.terms.10topics$`Topic 10`[1:15], collapse = "|"), ")\\b", sep = "")
+matches <- str_extract_all(topic10_hist$word, search_pattern)
+is_word <- lengths(matches) > 0
+words_found <- topic10_hist[is_word, ]
+
+# Plot a horizontal histogram with words in top 10 of topic 1
+ggplot(head(words_found,10), aes(x = reorder(word, freq.y))) +
+  geom_col(aes(y = freq.y, fill = "Frequency in topic 10"), alpha = 1) +
+  geom_col(aes(y = freq.x, fill = "Overall Frequency"), alpha = 0.5) +
+  scale_fill_manual(values = c("cyan", "darkgoldenrod1"))+
+  labs(title="Topic 10 Key Words Frequency",
+        x = "Words",
+        y = "Frequency") +
+  guides(fill = guide_legend(title = "Y-axis")) +
+  coord_flip()
+```
+
+# Sentiment Analysis:
+```{r}
+library(rtweet)
+library(tidytext)
+library("textdata")
+```
+
+#FOR TOPIC 4: Brand reputation
+```{r}
+search_pattern <- paste("\\b(", paste(cell.terms.10topics$`Topic 4`[1:15], collapse = "|"), ")\\b", sep = "")
+matches <- str_extract_all(cell$text, search_pattern)
+contains_word <- lengths(matches) > 0
+sentences_with_word <- cell[contains_word, ]
+
+tidy_tweets <- sentences_with_word %>%
+  unnest_tokens(word, text)
+```
+```{r}
+sentiments <- get_sentiments("afinn")
+tweet_sentiments <- tidy_tweets %>%
+  inner_join(sentiments) %>%
+  group_by(id) %>%
+  summarize(sentiment_score = sum(value)) %>%
+  ungroup()
+```
+```{r}
+library(ggplot2)
+ggplot(tweet_sentiments, aes(x = sentiment_score)) +
+  geom_histogram() +
+  labs(title = "Sentiment of All tweets for Topic 4",
+       x = "Sentiment score", y = "Count")
+```
+```{r}
+mean(tweet_sentiments$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, mcdonaldsfull, by = "id", all = FALSE)$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, kfcfull, by = "id", all = FALSE)$sentiment_score)
+```
+
+```{r}
+mean(merge(tweet_sentiments, subwayfull , by = "id", all = FALSE)$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, starbucksfull , by = "id", all = FALSE)$sentiment_score)
+```
+
+# FOR TOPIC 6: Sales and Promotions
+```{r}
+search_pattern <- str_c(cell.terms.10topics$`Topic 6`[1:10], collapse = "|")
+matches <- str_extract_all(cell$text, search_pattern)
+contains_word <- lengths(matches) > 0
+sentences_with_word <- cell[contains_word, ]
+
+tidy_tweets <- sentences_with_word %>%
+  unnest_tokens(word, text)
+```
+
+```{r}
+sentiments <- get_sentiments("afinn")
+tweet_sentiments <- tidy_tweets %>%
+  inner_join(sentiments) %>%
+  group_by(id) %>%
+  summarize(sentiment_score = sum(value)) %>%
+  ungroup()
+```
+```{r}
+library(ggplot2)
+ggplot(tweet_sentiments, aes(x = sentiment_score)) +
+  geom_histogram() +
+  labs(title = "Sentiment of All tweets for Topic 6:",
+       x = "Sentiment score", y = "Count")
+```
+```{r}
+mean(tweet_sentiments$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, mcdonaldsfull, by = "id", all = FALSE)$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, kfcfull, by = "id", all = FALSE)$sentiment_score)
+```
+
+```{r}
+mean(merge(tweet_sentiments, subwayfull, by = "id", all = FALSE)$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, starbucksfull , by = "id", all = FALSE)$sentiment_score)
+```
+
+#FOR TOPIC 7: Food and Beverages
+```{r}
+search_pattern <- paste("\\b(", paste(cell.terms.10topics$`Topic 7`[1:15], collapse = "|"), ")\\b", sep = "")
+matches <- str_extract_all(cell$text, search_pattern)
+contains_word <- lengths(matches) > 0
+sentences_with_word <- cell[contains_word, ]
+
+tidy_tweets <- sentences_with_word %>%
+  unnest_tokens(word, text)
+```
+```{r}
+sentiments <- get_sentiments("afinn")
+tweet_sentiments <- tidy_tweets %>%
+  inner_join(sentiments) %>%
+  group_by(id) %>%
+  summarize(sentiment_score = sum(value)) %>%
+  ungroup()
+```
+```{r}
+library(ggplot2)
+ggplot(tweet_sentiments, aes(x = sentiment_score)) +
+  geom_histogram() +
+  labs(title = "Sentiment of All tweets for Topic 7",
+       x = "Sentiment score", y = "Count")
+```
+```{r}
+mean(tweet_sentiments$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, mcdonaldsfull, by = "id", all = FALSE)$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, kfcfull, by = "id", all = FALSE)$sentiment_score)
+```
+
+```{r}
+mean(merge(tweet_sentiments, subwayfull , by = "id", all = FALSE)$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, starbucksfull , by = "id", all = FALSE)$sentiment_score)
+```
+
+#FOR TOPIC 10: Social Media Engagement
+```{r}
+search_pattern <- paste("\\b(", paste(cell.terms.10topics$`Topic 10`[1:15], collapse = "|"), ")\\b", sep = "")
+matches <- str_extract_all(cell$text, search_pattern)
+contains_word <- lengths(matches) > 0
+sentences_with_word <- cell[contains_word, ]
+
+tidy_tweets <- sentences_with_word %>%
+  unnest_tokens(word, text)
+```
+```{r}
+sentiments <- get_sentiments("afinn")
+tweet_sentiments <- tidy_tweets %>%
+  inner_join(sentiments) %>%
+  group_by(id) %>%
+  summarize(sentiment_score = sum(value)) %>%
+  ungroup()
+```
+```{r}
+library(ggplot2)
+ggplot(tweet_sentiments, aes(x = sentiment_score)) +
+  geom_histogram() +
+  labs(title = "Sentiment of All tweets for Topic 10",
+       x = "Sentiment score", y = "Count")
+```
+```{r}
+mean(tweet_sentiments$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, mcdonaldsfull, by = "id", all = FALSE)$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, kfcfull, by = "id", all = FALSE)$sentiment_score)
+```
+
+```{r}
+mean(merge(tweet_sentiments, subwayfull , by = "id", all = FALSE)$sentiment_score)
+```
+```{r}
+mean(merge(tweet_sentiments, starbucksfull , by = "id", all = FALSE)$sentiment_score)
+```
+
+# Attributes:
+# 4: Brand reputation
+# 6: Advertising and Promotions
+# 7: Food and Beverages
+# 10: Social Media Engagement
+```{r}
+brand_sentiments = data.frame(matrix(nrow=4, ncol=4))
+rownames(brand_sentiments) =  c("Mcdonalds", "KFC", "Subway", "Starbucks")
+colnames(brand_sentiments) = c("Brand Reputation", "Advertising and Promotions", "Food and Beverages", "Social Media Engagement")
+brand_sentiments$`Brand Reputation`= c(0.2195122, 0.9682647, 2.333333, 1.166667)
+brand_sentiments$`Advertising and Promotions` = c(3.419355, -1.307692, 0.8888889, 2.380074)
+brand_sentiments$`Food and Beverages` = c(0.8156028, 1.380952, 0.313253, 1.199275)
+brand_sentiments$`Social Media Engagement` = c(1.015428, 1.622642, 1.52381, 2.061545)
+
+x=cmdscale(dist(brand_sentiments, method = "euclidean", diag = TRUE, upper = TRUE), k=2)
+plot(x[,1], x[,2], type = "n", main = "Perceptual Map of Fast-Food Brands", 
+xlab="Advertising and Promotions", ylab = "Food and beverages" ,xlim=c(-3,3),ylim=c(-1.5,1.5))
+text(x[,1], x[,2], row.names(brand_sentiments), cex = 1.2,col=c(3,4,6,8))
+```
+```{r}
+brand_sentiments
+x
+```
+```{r}
+data.frame(x)
+```
+
